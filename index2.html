@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bouncey 小積：貪吃蛇遊戲</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      font-family: "Arial", sans-serif;
+      color: #f7f7f7;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      background-color: #333;
+      border: 2px solid #f7f7f7;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #ffcc00;
+    }
+    p {
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎈 Bouncey 小積 的午夜任務 🐍</h1>
+  <p>閃避、吃積分、活下去——小積今晚不打瞌睡！</p>
+  <canvas id="game" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const scale = 20;
+    const rows = canvas.height / scale;
+    const columns = canvas.width / scale;
+
+    let snake;
+    let fruit;
+
+    (function setup() {
+      snake = new Snake();
+      fruit = new Fruit();
+      fruit.pickLocation();
+
+      window.setInterval(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        fruit.draw();
+        snake.update();
+        snake.draw();
+
+        if (snake.eat(fruit)) {
+          fruit.pickLocation();
+        }
+
+        snake.checkCollision();
+      }, 150);
+    })();
+
+    window.addEventListener("keydown", e => {
+      const direction = e.key.replace("Arrow", "");
+      snake.changeDirection(direction);
+    });
+
+    function Snake() {
+      this.body = [
+        { x: 5 * scale, y: 5 * scale },
+        { x: 4 * scale, y: 5 * scale },
+        { x: 3 * scale, y: 5 * scale }
+      ];
+      this.xSpeed = scale;
+      this.ySpeed = 0;
+
+      this.draw = function () {
+        ctx.fillStyle = "#00FF99";
+        this.body.forEach(segment => {
+          ctx.fillRect(segment.x, segment.y, scale, scale);
+        });
+      };
+
+      this.update = function () {
+        const head = { x: this.body[0].x + this.xSpeed, y: this.body[0].y + this.ySpeed };
+        this.body.unshift(head);
+        this.body.pop();
+      };
+
+      this.changeDirection = function (direction) {
+        switch (direction) {
+          case "Up":
+            if (this.ySpeed === 0) {
+              this.xSpeed = 0;
+              this.ySpeed = -scale;
+            }
+            break;
+          case "Down":
+            if (this.ySpeed === 0) {
+              this.xSpeed = 0;
+              this.ySpeed = scale;
+            }
+            break;
+          case "Left":
+            if (this.xSpeed === 0) {
+              this.xSpeed = -scale;
+              this.ySpeed = 0;
+            }
+            break;
+          case "Right":
+            if (this.xSpeed === 0) {
+              this.xSpeed = scale;
+              this.ySpeed = 0;
+            }
+            break;
+        }
+      };
+
+      this.eat = function (fruit) {
+        const head = this.body[0];
+        if (head.x === fruit.x && head.y === fruit.y) {
+          this.body.push({});
+          return true;
+        }
+        return false;
+      };
+
+      this.checkCollision = function () {
+        const head = this.body[0];
+        for (let i = 1; i < this.body.length; i++) {
+          if (head.x === this.body[i].x && head.y === this.body[i].y) {
+            alert("小積撞到自己啦！遊戲結束 😢");
+            this.body = [
+              { x: 5 * scale, y: 5 * scale },
+              { x: 4 * scale, y: 5 * scale },
+              { x: 3 * scale, y: 5 * scale }
+            ];
+            this.xSpeed = scale;
+            this.ySpeed = 0;
+          }
+        }
+      };
+    }
+
+    function Fruit() {
+      this.x;
+      this.y;
+
+      this.pickLocation = function () {
+        this.x = Math.floor(Math.random() * columns) * scale;
+        this.y = Math.floor(Math.random() * rows) * scale;
+      };
+
+      this.draw = function () {
+        ctx.fillStyle = "#FF3366";
+        ctx.fillRect(this.x, this.y, scale, scale);
+      };
+    }
+  </script>
+</body>
+</html>
