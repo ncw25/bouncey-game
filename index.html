@@ -22,15 +22,25 @@
       color: #ff4081;
       margin-top: 10px;
     }
-    #restartBtn {
-      display: none;
+    #controls {
       margin-top: 20px;
-      padding: 10px 20px;
+    }
+    select, button {
       font-size: 18px;
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 6px;
+      border: none;
+    }
+    #startBtn {
       background-color: #ff4081;
       color: white;
-      border: none;
-      border-radius: 8px;
+      cursor: pointer;
+    }
+    #restartBtn {
+      display: none;
+      background-color: #ff4081;
+      color: white;
       cursor: pointer;
     }
   </style>
@@ -38,8 +48,19 @@
 <body>
   <h1>Bouncey 小積：貪吃蛇遊戲</h1>
   <p id="score">得分：0</p>
+
+  <div id="controls">
+    <label for="difficulty">選擇難度：</label>
+    <select id="difficulty">
+      <option value="300">🐢 初學者</option>
+      <option value="200" selected>🐇 普通</option>
+      <option value="120">🚀 挑戰</option>
+    </select>
+    <button id="startBtn">開始遊戲</button>
+    <button id="restartBtn">重新開始</button>
+  </div>
+
   <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <button id="restartBtn">重新開始</button>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -70,7 +91,7 @@
         ctx.fillRect(snake[i].x, snake[i].y, box, box);
       }
 
-      // 畫食物（方塊）
+      // 畫食物
       ctx.fillStyle = "#ff3366";
       ctx.fillRect(food.x, food.y, box, box);
 
@@ -83,11 +104,11 @@
       if (direction === "UP") headY -= box;
       if (direction === "DOWN") headY += box;
 
-      // 撞牆判定
+      // 撞牆
       if (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height) {
         navigator.vibrate?.(200);
         clearInterval(game);
-        document.getElementById("restartBtn").style.display = "block";
+        document.getElementById("restartBtn").style.display = "inline-block";
         return;
       }
 
@@ -96,7 +117,7 @@
         if (headX === snake[i].x && headY === snake[i].y) {
           navigator.vibrate?.(200);
           clearInterval(game);
-          document.getElementById("restartBtn").style.display = "block";
+          document.getElementById("restartBtn").style.display = "inline-block";
           return;
         }
       }
@@ -117,8 +138,12 @@
       snake.unshift(newHead);
     }
 
-    // ✅ 調慢速度：每 200ms 更新一次
-    game = setInterval(draw, 200);
+    document.getElementById("startBtn").onclick = () => {
+      const speed = parseInt(document.getElementById("difficulty").value);
+      game = setInterval(draw, speed);
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("difficulty").disabled = true;
+    };
 
     document.getElementById("restartBtn").onclick = () => {
       location.reload();
