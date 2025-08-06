@@ -1,20 +1,20 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>Bouncey 小積：玩具店貪吃蛇</title>
+  <title>Bouncey 小積：貪吃蛇遊戲</title>
   <style>
     body {
       margin: 0;
       font-family: 'Arial', sans-serif;
-      background-image: url('https://i.imgur.com/yourToyStoreBackground.jpg'); /* 換成玩具店背景圖 */
-      background-size: cover;
+      background-color: #fce4ec;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
     canvas {
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: #fff8f0;
       margin-top: 20px;
       border: 2px solid #333;
     }
@@ -37,7 +37,7 @@
   </style>
 </head>
 <body>
-  <h1>Bouncey 小積：玩具店貪吃蛇</h1>
+  <h1>Bouncey 小積：貪吃蛇遊戲</h1>
   <p id="score">得分：0</p>
   <canvas id="gameCanvas" width="400" height="400"></canvas>
   <button id="restartBtn">重新開始</button>
@@ -48,7 +48,7 @@
     const box = 20;
     let score = 0;
     let snake = [{ x: 9 * box, y: 10 * box }];
-    let toy = {
+    let food = {
       x: Math.floor(Math.random() * 19) * box,
       y: Math.floor(Math.random() * 19) * box
     };
@@ -71,10 +71,9 @@
         ctx.fillRect(snake[i].x, snake[i].y, box, box);
       }
 
-      // 畫玩具（食物）
-      const toyImg = new Image();
-      toyImg.src = "https://i.imgur.com/yourToyIcon.png"; // 換成玩具圖示
-      ctx.drawImage(toyImg, toy.x, toy.y, box, box);
+      // 畫食物（方塊）
+      ctx.fillStyle = "#ff3366";
+      ctx.fillRect(food.x, food.y, box, box);
 
       // 更新蛇位置
       let headX = snake[0].x;
@@ -87,7 +86,7 @@
 
       // 撞牆判定
       if (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height) {
-        navigator.vibrate?.(200); // 撞牆震動
+        navigator.vibrate?.(200);
         clearInterval(game);
         document.getElementById("restartBtn").style.display = "block";
         return;
@@ -103,11 +102,11 @@
         }
       }
 
-      // 吃玩具
-      if (headX === toy.x && headY === toy.y) {
+      // 吃食物
+      if (headX === food.x && headY === food.y) {
         score++;
         document.getElementById("score").innerText = "得分：" + score;
-        toy = {
+        food = {
           x: Math.floor(Math.random() * 19) * box,
           y: Math.floor(Math.random() * 19) * box
         };
