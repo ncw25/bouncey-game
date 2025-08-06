@@ -1,164 +1,129 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bouncey 小積：貪吃蛇遊戲</title>
+  <title>Bouncey 小積：玩具店貪吃蛇</title>
   <style>
     body {
       margin: 0;
-      background-color: #111;
-      font-family: "Arial", sans-serif;
-      color: #f7f7f7;
-      text-align: center;
+      font-family: 'Arial', sans-serif;
+      background-image: url('https://i.imgur.com/yourToyStoreBackground.jpg'); /* 換成玩具店背景圖 */
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     canvas {
-      display: block;
-      margin: 20px auto;
-      background-color: #333;
-      border: 2px solid #f7f7f7;
-    }
-    h1 {
+      background-color: rgba(255, 255, 255, 0.8);
       margin-top: 20px;
-      font-size: 24px;
-      color: #ffcc00;
+      border: 2px solid #333;
     }
-    p {
-      color: #ccc;
+    #score {
+      font-size: 24px;
+      color: #ff4081;
+      margin-top: 10px;
+    }
+    #restartBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #ff4081;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>🎈 Bouncey 小積 的午夜任務 🐍</h1>
-  <p>閃避、吃積分、活下去——小積今晚不打瞌睡！</p>
-  <canvas id="game" width="400" height="400"></canvas>
+  <h1>Bouncey 小積：玩具店貪吃蛇</h1>
+  <p id="score">得分：0</p>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <button id="restartBtn">重新開始</button>
 
   <script>
-    const canvas = document.getElementById("game");
+    const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const scale = 20;
-    const rows = canvas.height / scale;
-    const columns = canvas.width / scale;
+    const box = 20;
+    let score = 0;
+    let snake = [{ x: 9 * box, y: 10 * box }];
+    let toy = {
+      x: Math.floor(Math.random() * 19) * box,
+      y: Math.floor(Math.random() * 19) * box
+    };
+    let direction = "RIGHT";
+    let game;
 
-    let snake;
-    let fruit;
-
-    (function setup() {
-      snake = new Snake();
-      fruit = new Fruit();
-      fruit.pickLocation();
-
-      window.setInterval(() => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        fruit.draw();
-        snake.update();
-        snake.draw();
-
-        if (snake.eat(fruit)) {
-          fruit.pickLocation();
-        }
-
-        snake.checkCollision();
-      }, 150);
-    })();
-
-    window.addEventListener("keydown", e => {
-      const direction = e.key.replace("Arrow", "");
-      snake.changeDirection(direction);
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+      else if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+      else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+      else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
     });
 
-    function Snake() {
-      this.body = [
-        { x: 5 * scale, y: 5 * scale },
-        { x: 4 * scale, y: 5 * scale },
-        { x: 3 * scale, y: 5 * scale }
-      ];
-      this.xSpeed = scale;
-      this.ySpeed = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      this.draw = function () {
-        ctx.fillStyle = "#00FF99";
-        this.body.forEach(segment => {
-          ctx.fillRect(segment.x, segment.y, scale, scale);
-        });
-      };
+      // 畫蛇
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? "#ff4081" : "#ffcdd2";
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      }
 
-      this.update = function () {
-        const head = { x: this.body[0].x + this.xSpeed, y: this.body[0].y + this.ySpeed };
-        this.body.unshift(head);
-        this.body.pop();
-      };
+      // 畫玩具（食物）
+      const toyImg = new Image();
+      toyImg.src = "https://i.imgur.com/yourToyIcon.png"; // 換成玩具圖示
+      ctx.drawImage(toyImg, toy.x, toy.y, box, box);
 
-      this.changeDirection = function (direction) {
-        switch (direction) {
-          case "Up":
-            if (this.ySpeed === 0) {
-              this.xSpeed = 0;
-              this.ySpeed = -scale;
-            }
-            break;
-          case "Down":
-            if (this.ySpeed === 0) {
-              this.xSpeed = 0;
-              this.ySpeed = scale;
-            }
-            break;
-          case "Left":
-            if (this.xSpeed === 0) {
-              this.xSpeed = -scale;
-              this.ySpeed = 0;
-            }
-            break;
-          case "Right":
-            if (this.xSpeed === 0) {
-              this.xSpeed = scale;
-              this.ySpeed = 0;
-            }
-            break;
+      // 更新蛇位置
+      let headX = snake[0].x;
+      let headY = snake[0].y;
+
+      if (direction === "LEFT") headX -= box;
+      if (direction === "RIGHT") headX += box;
+      if (direction === "UP") headY -= box;
+      if (direction === "DOWN") headY += box;
+
+      // 撞牆判定
+      if (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height) {
+        navigator.vibrate?.(200); // 撞牆震動
+        clearInterval(game);
+        document.getElementById("restartBtn").style.display = "block";
+        return;
+      }
+
+      // 撞自己
+      for (let i = 1; i < snake.length; i++) {
+        if (headX === snake[i].x && headY === snake[i].y) {
+          navigator.vibrate?.(200);
+          clearInterval(game);
+          document.getElementById("restartBtn").style.display = "block";
+          return;
         }
-      };
+      }
 
-      this.eat = function (fruit) {
-        const head = this.body[0];
-        if (head.x === fruit.x && head.y === fruit.y) {
-          this.body.push({});
-          return true;
-        }
-        return false;
-      };
+      // 吃玩具
+      if (headX === toy.x && headY === toy.y) {
+        score++;
+        document.getElementById("score").innerText = "得分：" + score;
+        toy = {
+          x: Math.floor(Math.random() * 19) * box,
+          y: Math.floor(Math.random() * 19) * box
+        };
+      } else {
+        snake.pop();
+      }
 
-      this.checkCollision = function () {
-        const head = this.body[0];
-        for (let i = 1; i < this.body.length; i++) {
-          if (head.x === this.body[i].x && head.y === this.body[i].y) {
-            alert("小積撞到自己啦！遊戲結束 😢");
-            this.body = [
-              { x: 5 * scale, y: 5 * scale },
-              { x: 4 * scale, y: 5 * scale },
-              { x: 3 * scale, y: 5 * scale }
-            ];
-            this.xSpeed = scale;
-            this.ySpeed = 0;
-          }
-        }
-      };
+      let newHead = { x: headX, y: headY };
+      snake.unshift(newHead);
     }
 
-    function Fruit() {
-      this.x;
-      this.y;
+    game = setInterval(draw, 150);
 
-      this.pickLocation = function () {
-        this.x = Math.floor(Math.random() * columns) * scale;
-        this.y = Math.floor(Math.random() * rows) * scale;
-      };
-
-      this.draw = function () {
-        ctx.fillStyle = "#FF3366";
-        ctx.fillRect(this.x, this.y, scale, scale);
-      };
-    }
+    document.getElementById("restartBtn").onclick = () => {
+      location.reload();
+    };
   </script>
 </body>
 </html>
